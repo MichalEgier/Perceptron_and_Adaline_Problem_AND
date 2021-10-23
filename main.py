@@ -1,7 +1,7 @@
 import random
-import matplotlib.pyplot as plt
-import numpy as np
 import math
+
+import numpy as np
 
 class Sample():
     def __init__(self, x1: int, x2: int, y: int):
@@ -340,4 +340,103 @@ def __main__():
 
 '''
 
-__main__()
+
+#Second laboratory - first neural network
+
+
+    #tu troche poprawic bo nieelegancko zrobione jest
+class Matrix():
+    def __init__(self, height, width, random):
+        if random:
+            self.numpy_matrix = np.array(np.random.rand(height, width))
+        else:
+            print("NOT IMPLEMENTED YET!")
+    def numpy_repr(self):
+        return self.numpy_matrix
+
+class Vector():
+    def __init__(self, height, random):
+        if random:
+            self.numpy_vector = np.array(np.random.rand(height, 1))
+        else:
+            print("NOT IMPLEMENTED YET!")
+
+    def numpy_repr(self):
+        return self.numpy_vector
+
+
+class neural_network():
+
+    def create_weights(self, layers_sizes):
+        matrices = []
+        i = 0
+        while i < len(layers_sizes) -1:
+            matrices.append(Matrix(height = layers_sizes[i+1], width = layers_sizes[i], random = True).numpy_repr())
+            i += 1
+        return matrices
+
+    def create_biases(self, layers_sizes):
+        vectors = []
+        i = 1   #tutaj sie zastanowic
+        while i < len(layers_sizes):
+            vectors.append(Vector(height = layers_sizes[i], random = True).numpy_repr())
+
+    def __init__(self, layers_sizes: list(int), hidden_layer_activ_funct, output_layer_activ_funct):
+        self.weights_matrices = create_weights(layers_sizes)
+        self.biases_vectors = create_biases(layers_sizes)
+        self.number_of_layers = len(layers_sizes)
+        self.hidden_layer_activation_function = hidden_layer_activ_funct
+        self.output_layer_activation_function = output_layer_activ_funct
+
+    def vector_function(self, function):
+        def vector_func(vector):
+            new_vector = Vector(height = len(vector), random = True).numpy_repr()
+            iter = 0
+            while iter < len(vector):
+                new_vector[iter] = function(vector[iter])
+                iter += 1
+        return vector_func
+
+
+    def process_sample(self, sample: Vector):
+        #tutaj asercja ze wysokosc wektora jest zgodna z szerokoscia pierwszej macierzy
+        iterator = 0    #tutaj trzeba sie zastanowic
+        activation_function = self.hidden_layer_activation_function
+        vector_activation_function = vector_function(activation_function)
+        w = self.weights_matrices[iterator] #current_weight_matrix
+        b = self.biases_matrices[iterator] #current_biases_matrix
+        z = sample.numpy_repr()
+        while iterator < self.number_of_layers - 1:
+            a = vector_activation_function(w*z + b)
+            iterator += 1
+            w = self.weights_matrices[iterator]  # current_weight_matrix
+            b = self.biases_matrices[iterator]  # current_biases_matrix
+            z = a
+        activation_function = self.output_layer_activation_function
+        vector_activation_function = activation_function #vector_function(activation_function) #tutaj cos zrobic zeby to upiekszyc
+        a = vector_activation_function(w.dot(z) + b)    #tutaj teraz jest ostateczny wektor z ktorym musimy dziala
+        return a
+
+    def train_network(self, training_set: list(Vector)):
+        pass    #nastepne laboratoria
+
+hidd_layer_actv_func = lambda x: 0 if x < 0 else x
+
+def out_function(vector):
+    new_vector = Vector(height=len(vector), random=True)
+    eZk = 0
+    for x in vector:
+        eZk += math.exp(x)
+    iter = 0
+    while iter < len(vector):
+        new_vector[iter] = math.exp(vector[iter]) / eZk
+        iter += 1
+    return new_vector
+
+out_layer_actv_func = out_function
+
+network = neural_network([10, 5, 3], hidd_layer_actv_func, out_layer_actv_func)
+
+processed = network.process_sample(Vector(height=10, random = True))
+
+print(str(processed))
