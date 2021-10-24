@@ -1,5 +1,6 @@
 import random
 import math
+from typing import List
 
 import numpy as np
 
@@ -367,6 +368,13 @@ class Vector():
 
 class neural_network():
 
+    def __init__(self, layers_sizes: List[int], hidden_layer_activ_funct, output_layer_activ_funct):
+        self.weights_matrices = self.create_weights(layers_sizes)
+        self.biases_vectors = self.create_biases(layers_sizes)
+        self.number_of_layers = len(layers_sizes)
+        self.hidden_layer_activation_function = hidden_layer_activ_funct
+        self.output_layer_activation_function = output_layer_activ_funct
+
     def create_weights(self, layers_sizes):
         matrices = []
         i = 0
@@ -380,13 +388,8 @@ class neural_network():
         i = 1   #tutaj sie zastanowic
         while i < len(layers_sizes):
             vectors.append(Vector(height = layers_sizes[i], random = True).numpy_repr())
-
-    def __init__(self, layers_sizes: list(int), hidden_layer_activ_funct, output_layer_activ_funct):
-        self.weights_matrices = create_weights(layers_sizes)
-        self.biases_vectors = create_biases(layers_sizes)
-        self.number_of_layers = len(layers_sizes)
-        self.hidden_layer_activation_function = hidden_layer_activ_funct
-        self.output_layer_activation_function = output_layer_activ_funct
+            i += 1
+        return vectors
 
     def vector_function(self, function):
         def vector_func(vector):
@@ -395,29 +398,49 @@ class neural_network():
             while iter < len(vector):
                 new_vector[iter] = function(vector[iter])
                 iter += 1
+            return new_vector
         return vector_func
 
 
     def process_sample(self, sample: Vector):
+        for x in self.weights_matrices:
+            print(str(np.shape(x)))
+        for x in self.biases_vectors:
+            print(str(np.shape(x)))
+
         #tutaj asercja ze wysokosc wektora jest zgodna z szerokoscia pierwszej macierzy
         iterator = 0    #tutaj trzeba sie zastanowic
         activation_function = self.hidden_layer_activation_function
-        vector_activation_function = vector_function(activation_function)
-        w = self.weights_matrices[iterator] #current_weight_matrix
-        b = self.biases_matrices[iterator] #current_biases_matrix
+        vector_activation_function = self.vector_function(activation_function)
         z = sample.numpy_repr()
-        while iterator < self.number_of_layers - 1:
-            a = vector_activation_function(w*z + b)
-            iterator += 1
+                                                #number of iterations = number of layers - 1
+                                                 # but also the last iteration is with output function
+                                                 # so must be considered separetely
+        while iterator < self.number_of_layers - 2:
             w = self.weights_matrices[iterator]  # current_weight_matrix
-            b = self.biases_matrices[iterator]  # current_biases_matrix
+            b = self.biases_vectors[iterator]  # current_biases_matrix
+            #print(str(type(w)) + " " + str(type(z)) + " " + str(type(b)))
+            print(str(iterator))
+            print("Another iteration")
+            print("w.shape=" + str(np.shape(w)) + " z.shape=" + str(np.shape(z)) + " b.shape=" + str(np.shape(b)))
+            #
+            k = w.dot(z)
+            m = k + b
+            a = vector_activation_function(m)
+            #
+            #a = vector_activation_function(w.dot(z) + b)
             z = a
+            iterator += 1
+        w = self.weights_matrices[iterator]  # current_weight_matrix
+        b = self.biases_vectors[iterator]  # current_biases_matrix
         activation_function = self.output_layer_activation_function
         vector_activation_function = activation_function #vector_function(activation_function) #tutaj cos zrobic zeby to upiekszyc
+        print("Another iteration")
+        print("w.shape=" + str(np.shape(w)) + " z.shape=" + str(np.shape(z)) + " b.shape=" + str(np.shape(b)))
         a = vector_activation_function(w.dot(z) + b)    #tutaj teraz jest ostateczny wektor z ktorym musimy dziala
         return a
 
-    def train_network(self, training_set: list(Vector)):
+    def train_network(self, training_set: List[Vector]):
         pass    #nastepne laboratoria
 
 hidd_layer_actv_func = lambda x: 0 if x < 0 else x
@@ -429,14 +452,14 @@ def out_function(vector):
         eZk += math.exp(x)
     iter = 0
     while iter < len(vector):
-        new_vector[iter] = math.exp(vector[iter]) / eZk
+        new_vector.numpy_repr()[iter] = math.exp(vector[iter]) / eZk
         iter += 1
     return new_vector
 
 out_layer_actv_func = out_function
 
-network = neural_network([10, 5, 3], hidd_layer_actv_func, out_layer_actv_func)
+network = neural_network([300, 150, 10], hidd_layer_actv_func, out_layer_actv_func)
 
-processed = network.process_sample(Vector(height=10, random = True))
+processed = network.process_sample(Vector(height=300, random = True))
 
-print(str(processed))
+print(str(processed.numpy_repr()))
